@@ -1,0 +1,239 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: gitlab-runner-gitlab-runner
+  name: gitlab-runner-gitlab-runner
+  namespace: gitlab
+  annotations:
+    reloader.stakater.com/auto: "true"
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 10
+  selector:
+    matchLabels:
+      app: gitlab-runner-gitlab-runner
+  strategy:
+    rollingUpdate:
+      maxSurge: 50%
+      maxUnavailable: 50%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: gitlab-runner-gitlab-runner
+    spec:
+      containers:
+      - command:
+        - /bin/bash
+        - /scripts/entrypoint
+        env:
+        - name: CI_SERVER_URL
+          value: https://gitlab.com/
+        - name: CLONE_URL
+          value: https://gitlab.com/
+        - name: RUNNER_REQUEST_CONCURRENCY
+          value: "1"
+        - name: RUNNER_EXECUTOR
+          value: kubernetes
+        - name: REGISTER_LOCKED
+          value: "true"
+        - name: RUNNER_TAG_LIST
+          value: "test"
+        - name: RUNNER_OUTPUT_LIMIT
+          value: "4096"
+        - name: KUBERNETES_IMAGE
+          value: ubuntu:20.04
+        - name: KUBERNETES_PRIVILEGED
+          value: "true"
+        - name: KUBERNETES_NAMESPACE
+          value: "gitlab"
+        - name: KUBERNETES_POLL_TIMEOUT
+          value: "180"
+        - name: KUBERNETES_POLL_INTERVAL
+          value: "3"
+        - name: KUBERNETES_CPU_LIMIT
+          value: "2"
+        - name: KUBERNETES_MEMORY_LIMIT
+          value: "3.5Gi"
+        - name: KUBERNETES_CPU_REQUEST
+          value: "1.5"
+        - name: KUBERNETES_MEMORY_REQUEST
+          value: "3.5Gi"
+        - name: KUBERNETES_SERVICE_ACCOUNT
+        - name: KUBERNETES_SERVICE_CPU_LIMIT
+        - name: KUBERNETES_SERVICE_MEMORY_LIMIT
+        - name: KUBERNETES_SERVICE_CPU_REQUEST
+        - name: KUBERNETES_SERVICE_MEMORY_REQUEST
+        - name: KUBERNETES_HELPER_CPU_LIMIT
+        - name: KUBERNETES_HELPER_MEMORY_LIMIT
+        - name: KUBERNETES_HELPER_CPU_REQUEST
+          value: "100m"
+        - name: KUBERNETES_HELPER_MEMORY_REQUEST
+          value: "128Mi"
+        - name: KUBERNETES_HELPER_IMAGE
+        - name: KUBERNETES_PULL_POLICY
+          value: "if-not-present"
+        - name: CACHE_TYPE
+          value: s3
+        - name: CACHE_PATH
+          value: gitlab-caches
+        - name: CACHE_SHARED
+          value: "true"
+        - name: CACHE_S3_SERVER_ADDRESS
+          value: s3.amazonaws.com
+        - name: CACHE_S3_BUCKET_NAME
+          value: kubernetes-gitlab-cache
+        - name: CACHE_S3_BUCKET_LOCATION
+          value: eu-west-1
+        - name: RUNNER_CACHE_DIR
+          value: /opt/gitlab-runner/cache/
+        - name: RUNNER_BUILDS_DIR
+          value: /opt/gitlab-runner/builds/
+        image: gitlab/gitlab-runner:alpine-v13.1.0
+        imagePullPolicy: IfNotPresent
+        lifecycle:
+          preStop:
+            exec:
+              command:
+              - /entrypoint
+              - unregister
+              - --all-runners
+        livenessProbe:
+          exec:
+            command:
+            - /bin/bash
+            - /scripts/check-live
+        name: gitlab-runner-gitlab-runner
+        ports:
+        - containerPort: 9252
+          name: metrics
+          protocol: TCP
+        readinessProbe:
+          exec:
+            command:
+            - /usr/bin/pgrep
+            - gitlab.*runner
+        volumeMounts:
+        - mountPath: /secrets
+          name: runner-secrets
+        - mountPath: /home/gitlab-runner/.gitlab-runner
+          name: etc-gitlab-runner
+        - mountPath: /scripts
+          name: scripts
+        resources:
+          requests:
+            cpu: "50m"
+            memory: "200Mi"
+      dnsPolicy: ClusterFirst
+      initContainers:
+      - command:
+        - sh
+        - /config/configure
+        env:
+        - name: CI_SERVER_URL
+          value: https://gitlab.com/
+        - name: CLONE_URL
+          value: https://gitlab.com/
+        - name: RUNNER_REQUEST_CONCURRENCY
+          value: "1"
+        - name: RUNNER_EXECUTOR
+          value: kubernetes
+        - name: REGISTER_LOCKED
+          value: "true"
+        - name: RUNNER_TAG_LIST
+          value: "test"
+        - name: RUNNER_OUTPUT_LIMIT
+          value: "4096"
+        - name: KUBERNETES_IMAGE
+          value: ubuntu:20.04
+        - name: KUBERNETES_PRIVILEGED
+          value: "true"
+        - name: KUBERNETES_NAMESPACE
+          value: "gitlab"
+        - name: KUBERNETES_POLL_TIMEOUT
+          value: "180"
+        - name: KUBERNETES_POLL_INTERVAL
+          value: "3"
+        - name: KUBERNETES_CPU_LIMIT
+          value: "2"
+        - name: KUBERNETES_MEMORY_LIMIT
+          value: "3.5Gi"
+        - name: KUBERNETES_CPU_REQUEST
+          value: "1.5"
+        - name: KUBERNETES_MEMORY_REQUEST
+          value: "3.5Gi"
+        - name: KUBERNETES_SERVICE_ACCOUNT
+        - name: KUBERNETES_SERVICE_CPU_LIMIT
+        - name: KUBERNETES_SERVICE_MEMORY_LIMIT
+        - name: KUBERNETES_SERVICE_CPU_REQUEST
+        - name: KUBERNETES_SERVICE_MEMORY_REQUEST
+        - name: KUBERNETES_HELPER_CPU_LIMIT
+        - name: KUBERNETES_HELPER_MEMORY_LIMIT
+        - name: KUBERNETES_HELPER_CPU_REQUEST
+          value: "100m"
+        - name: KUBERNETES_HELPER_MEMORY_REQUEST
+          value: "128Mi"
+        - name: KUBERNETES_HELPER_IMAGE
+        - name: KUBERNETES_PULL_POLICY
+          value: "if-not-present"
+        - name: CACHE_TYPE
+          value: s3
+        - name: CACHE_PATH
+          value: gitlab-caches
+        - name: CACHE_SHARED
+          value: "true"
+        - name: CACHE_S3_SERVER_ADDRESS
+          value: s3.amazonaws.com
+        - name: CACHE_S3_BUCKET_NAME
+          value: kubernetes-gitlab-cache
+        - name: CACHE_S3_BUCKET_LOCATION
+          value: eu-west-1
+        - name: RUNNER_CACHE_DIR
+          value: /opt/gitlab-runner/cache/
+        - name: RUNNER_BUILDS_DIR
+          value: /opt/gitlab-runner/builds/
+        image: gitlab/gitlab-runner:alpine-v13.1.0
+        imagePullPolicy: IfNotPresent
+        name: configure
+        volumeMounts:
+        - mountPath: /secrets
+          name: runner-secrets
+        - mountPath: /config
+          name: scripts
+          readOnly: true
+        - mountPath: /init-secrets
+          name: init-runner-secrets
+          readOnly: true
+        resources:
+          requests:
+            cpu: "50m"
+            memory: "200Mi"
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext:
+        fsGroup: 65533
+        runAsUser: 100
+      serviceAccount: gitlab-runner-gitlab-runner
+      serviceAccountName: gitlab-runner-gitlab-runner
+      terminationGracePeriodSeconds: 300
+      volumes:
+      - emptyDir:
+          medium: Memory
+        name: runner-secrets
+      - emptyDir:
+          medium: Memory
+        name: etc-gitlab-runner
+      - name: init-runner-secrets
+        projected:
+          defaultMode: 420
+          sources:
+          - secret:
+              items:
+              - key: runner-registration-token
+                path: runner-registration-token
+              name: gitlab-runner-token
+      - configMap:
+          defaultMode: 420
+          name: gitlab-runner-gitlab-runner
+        name: scripts

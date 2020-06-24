@@ -1,0 +1,39 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+    app: gitlab-runner-gitlab-runner
+  name: gitlab-runner-gitlab-runner
+  namespace: gitlab
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - '*'
+  verbs:
+  - '*'
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    app: gitlab-runner-gitlab-runner
+  name: gitlab-runner-gitlab-runner
+  namespace: gitlab
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: gitlab-runner-gitlab-runner
+subjects:
+- kind: ServiceAccount
+  name: gitlab-runner-gitlab-runner
+  namespace: gitlab
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app: gitlab-runner-gitlab-runner
+  name: gitlab-runner-gitlab-runner
+  namespace: gitlab
+automountServiceAccountToken: true
