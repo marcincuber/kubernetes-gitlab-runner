@@ -5,7 +5,7 @@ Gitlab runners configuration yamls to run in Kubernetes
 
 Configuration deployed using provided yamls in [k8s-templates](./k8s-templates) will create runners in gitlab namespace. It has configuration for S3 bucket caching (make sure to update bucket name in deployment.yaml).
 
-## Kubernetes addons used for deployments
+## Kubernetes addons used for deployments
 
 In my configuration I am making use of the following addons:
 
