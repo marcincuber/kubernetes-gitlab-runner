@@ -90,7 +90,7 @@ spec:
           value: /opt/gitlab-runner/cache/
         - name: RUNNER_BUILDS_DIR
           value: /opt/gitlab-runner/builds/
-        image: gitlab/gitlab-runner:alpine-v13.1.0
+        image: gitlab/gitlab-runner:alpine-v13.5.0
         imagePullPolicy: IfNotPresent
         lifecycle:
           preStop:
@@ -193,7 +193,7 @@ spec:
           value: /opt/gitlab-runner/cache/
         - name: RUNNER_BUILDS_DIR
           value: /opt/gitlab-runner/builds/
-        image: gitlab/gitlab-runner:alpine-v13.1.0
+        image: gitlab/gitlab-runner:alpine-v13.5.0
         imagePullPolicy: IfNotPresent
         name: configure
         volumeMounts:
